@@ -1,0 +1,6 @@
+# Windows... *why?*
+Thumbs.db
+# The PHP file containing the API secrets
+secret.php
+# The compiled JS
+app.js

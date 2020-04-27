@@ -1,0 +1,93 @@
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Weather</title>
+        
+        <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@100;300;400&family=Sen:wght@300;400&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Two+Tone" rel="stylesheet">
+        <link rel="preload" href="styles/main.css" as="style">
+        <link rel="stylesheet" href="styles/main.css">
+
+        <link rel="manifest" href="manifest.json">
+        <link rel="apple-touch-icon" href="icon.png">
+        <meta name="apple-mobile-web-app-title" content="Weather">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js"></script>
+        <script defer src="scripts/app.js"></script>
+        <script>
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                    navigator.serviceWorker.register('service-worker.js').then(function(registration) {
+                    // Registration was successful
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                    }, function(err) {
+                    // registration failed :(
+                    console.log('ServiceWorker registration failed: ', err);
+                    });
+                });
+            }
+        </script>
+    </head>
+    <body>
+        <div class="overlay-mobile-only"> <!-- I'll be getting rid of this at some point. I just need to create a design that works well on wide screens as well -->
+            <h1 class="material-icons-two-tone">screen_rotation</h1>
+            <span>At this time, this app is designed for vertical screens only.<br>Please either resize your window or change the orientation of your device.</span>
+        </div>
+        <div class="content">
+            <header>
+                <a class="material-icons-two-tone" id="menu" href="#menu">menu</a>
+                <span id="location">Null Island</span>
+                <a class="material-icons-two-tone two-tone" id="getlocation" href="#" disabled>my_location</a>
+            </header>
+            <nav>
+                <div class="controls">
+                    <a class="material-icons-two-tone" id="back" href="#">arrow_back</a>
+                    <a class="material-icons-two-tone two-tone" id="edit" href="#">edit</a>
+                </div>
+                <div class="input decorated">
+                    <i class="material-icons-two-tone">search</i>
+                    <input id="locationsearch" placeholder="800 Boylston St, Boston, MA">
+                </div>
+                <div class="saved">
+                    <span>Saved Places</span><br>
+                    <div class="places-container">
+                        <i id="none">No Saved Places... Yet</i>
+                    </div>
+                </div>
+            </nav>
+            <div class="nav-underlay"></div>
+            <main>
+                <section id="current">
+                    <h1>Currently</h1>
+                    <div class="conditions">
+                        <span id="temperature" title="Current Temperature">--&deg;</span><br>
+                        <span id="condition" title="Current Condition">Loading...</span>
+                    </div>
+                    <div class="bottom">
+                        <span class="update">Last updated: never</span>
+                    </div>
+                </section>
+                <section id="hourly">
+                    <h1>Hourly</h1>
+                    <div class="content">
+                        <i>Coming Soon</i>
+                    </div>
+                    <div class="bottom"></div>
+                </section>
+                <section id="daily">
+                    <h1>Daily</h1>
+                    <div class="content">
+                        <i>Coming Soon</i>
+                    </div>
+                    <div class="bottom"></div>
+                </section>
+                <footer>
+                    <span id="version">App Loading...</span><br>
+                    <a href="https://darksky.net/poweredby/" id="poweredby">Powered by Dark Sky</a>
+                </footer>
+            </main>
+        </div>
+    </body>
+</html>
