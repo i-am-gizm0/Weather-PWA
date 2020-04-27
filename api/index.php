@@ -72,7 +72,7 @@
                 // $lat = $d[0];
                 // $lon = $d[1];
 
-                $ch = curl_init("https://api.darksky.net/forecast/" . $weathertoken . "/" . $d);
+                $ch = curl_init("https://api.darksky.net/forecast/" . $weather_token . "/" . $d);
                 curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
                 $response = curl_exec($ch);
 
