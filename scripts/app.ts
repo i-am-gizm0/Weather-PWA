@@ -1,6 +1,6 @@
 let app = { // This is mostly so VSCode can use Intellisense. If there is a better way to set this up, a PR or issue would be more than welcome!
     q: (selector:string) => <HTMLElement>document.querySelector(selector), // My own small selector (jQuery is massive and I'm stubborn and want to do things on my own)
-    VERSION: '0.2.2', // Mostly so I can make sure the browser is updating the JS
+    VERSION: '0.2.5', // Mostly so I can make sure the browser is updating the JS
     location: {
         key: 'location',
         string: localStorage.getItem('location') ||  '42.3601,-71.0589',
@@ -39,27 +39,30 @@ let app = { // This is mostly so VSCode can use Intellisense. If there is a bett
     },
     ui: {
         button: {
-            location: undefined,
-            menu: undefined,
-            back: undefined,
-            edit: undefined
+            location: <HTMLAnchorElement>undefined,
+            menu: <HTMLAnchorElement>undefined,
+            back: <HTMLAnchorElement>undefined,
+            edit: <HTMLAnchorElement>undefined,
+            settings: <HTMLAnchorElement>undefined,
+            settingsBack: <HTMLAnchorElement>undefined
         },
         text: {
-            location: undefined,
-            version: undefined,
+            location: <HTMLSpanElement>undefined,
+            version: <HTMLSpanElement>undefined,
             currently: {
-                temperature: undefined,
-                condition: undefined,
-                lastUpdate: undefined
+                temperature: <HTMLSpanElement>undefined,
+                condition: <HTMLSpanElement>undefined,
+                lastUpdate: <HTMLSpanElement>undefined
             }
         },
         input: {
-            search: undefined
+            search: <HTMLInputElement>undefined
         },
         other: {
-            drawer: undefined,
-            navUnderlay: undefined,
-            places: undefined
+            drawer: <HTMLDivElement>undefined,
+            navUnderlay: <HTMLDivElement>undefined,
+            places: <HTMLDivElement>undefined,
+            settings: <HTMLDivElement>undefined
         }
     },
     saved: {
@@ -80,7 +83,7 @@ let app = { // This is mostly so VSCode can use Intellisense. If there is a bett
     updateLocationText: async () => {},
     updateWeather: async () => {},
     timer: () => {},
-    locationSearch: async (string:string) => {},
+    locationSearch: async () => {},
     closeOverlay: (e?:Event) => {}
 };
 
@@ -92,10 +95,12 @@ app.init = async () => {
 
     app.ui = { // Get all of the UI elements
         button: {
-            location: app.q('#getlocation'),
-            menu: app.q('#menu'),
-            back: app.q('#back'),
-            edit: app.q('#edit')
+            location: <HTMLAnchorElement>app.q('#getlocation'),
+            menu: <HTMLAnchorElement>app.q('#menu'),
+            back: <HTMLAnchorElement>app.q('#back'),
+            edit: <HTMLAnchorElement>app.q('#edit'),
+            settings: <HTMLAnchorElement>app.q('#settings'),
+            settingsBack: <HTMLAnchorElement>app.q('#sback')
         },
         text: {
             location: app.q('#location'),
@@ -107,12 +112,13 @@ app.init = async () => {
             }
         },
         input: {
-            search: app.q('#locationsearch')
+            search: <HTMLInputElement>app.q('#locationsearch')
         },
         other: {
-            drawer: app.q('nav'),
-            navUnderlay: app.q('.nav-underlay'),
-            places: app.q('.places-container')
+            drawer: <HTMLDivElement>app.q('nav'),
+            navUnderlay: <HTMLDivElement>app.q('.nav-underlay'),
+            places: <HTMLDivElement>app.q('.places-container'),
+            settings: <HTMLDivElement>app.q('.settings')
         }
     };
     app.ui.text.version.textContent = `App Version ${app.VERSION}`;
@@ -233,22 +239,40 @@ app.init = async () => {
         app.q('#current').classList.remove('wind');
         app.q('#current').classList.remove('fog');
         app.q('#current').classList.remove('cloudy');
+
+        app.q('header').classList.remove('clear');
+        app.q('header').classList.remove('part-cloud');
+        app.q('header').classList.remove('rain');
+        app.q('header').classList.remove('snow');
+        app.q('header').classList.remove('sleet');
+        app.q('header').classList.remove('wind');
+        app.q('header').classList.remove('fog');
+        app.q('header').classList.remove('cloudy');
+
         if (icon.includes('clear')) {
             app.q('#current').classList.add('clear');
+            app.q('header').classList.add('clear');
         } else if (icon.includes('partly-cloudy')) {
             app.q('#current').classList.add('part-cloud');
+            app.q('header').classList.add('part-cloud');
         } else if (icon.includes('rain')) {
             app.q('#current').classList.add('rain');
+            app.q('header').classList.add('rain');
         } else if (icon.includes('snow')) {
             app.q('#current').classList.add('snow');
+            app.q('header').classList.add('snow');
         } else if (icon.includes('sleet')) {
             app.q('#current').classList.add('sleet');
+            app.q('header').classList.add('sleet');
         } else if (icon.includes('wind')) {
             app.q('#current').classList.add('wind');
+            app.q('header').classList.add('wind');
         } else if (icon.includes('fog')) {
             app.q('#current').classList.add('fog');
+            app.q('header').classList.add('fog');
         } else if (icon.includes('cloudy')) {
             app.q('#current').classList.add('cloudy');
+            app.q('header').classList.add('cloudy');
         }
     };
     app.timer = () => { // Update the 'Last updated' timer
@@ -284,6 +308,7 @@ app.init = async () => {
             e.preventDefault();
         } 
         app.q('.content').classList.remove('nav-open');
+        document.body.classList.remove('scroll-lock');
     }
 
     /*
@@ -363,11 +388,12 @@ app.init = async () => {
     app.ui.button.menu.addEventListener('click', (e: MouseEvent) => {
         e.preventDefault();
         app.q('.content').classList.add('nav-open');
+        document.body.classList.add('scroll-lock');
     });
     app.ui.button.back.addEventListener('click', app.closeOverlay);
     app.ui.other.navUnderlay.addEventListener('click', app.closeOverlay);
-    app.ui.input.search.addEventListener('change', (e: string) => {
-        app.locationSearch(e);
+    app.ui.input.search.addEventListener('change', (e) => {
+        app.locationSearch();
         app.ui.input.search.blur();
     });
     app.ui.button.edit.addEventListener('click', (e: MouseEvent) => {
@@ -381,13 +407,24 @@ app.init = async () => {
         }
         app.saved.editing = !app.saved.editing;
     });
+    app.ui.button.settings.addEventListener('click', e => {
+        e.preventDefault();
+        app.closeOverlay();
+        app.ui.other.settings.classList.add('show');
+        document.body.classList.add('scroll-lock');
+    });
+    app.ui.button.settingsBack.addEventListener('click', e => {
+        e.preventDefault();
+        app.ui.other.settings.classList.remove('show');
+        document.body.classList.remove('scroll-lock');
+    });
 
     /*
      * Gestures
      */
     document.addEventListener('touchstart', (e) => {
         // console.log(e);
-        if (app.touch.start == {x:undefined, y:undefined}) {
+        if (app.touch.start.x == undefined && app.touch.start.x == undefined) {
             app.touch.start = {
                 x: e.touches[0].pageX,
                 y: e.touches[0].pageY
@@ -429,6 +466,11 @@ app.init = async () => {
             // Make sure the drawer is closed
             app.q('.content').classList.remove('nav-open');
         }
+
+        app.touch.start = {
+            x:undefined,
+            y:undefined
+        };
     });
 
     app.saved.load();
