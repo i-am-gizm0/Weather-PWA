@@ -1,3 +1,6 @@
+import type { Skycons } from 'skycons-ts';
+import type { WeatherData, DataBlock, DataPoint, CurrentData, HourData, DayData, Alert, UnixTimeStamp, URI, WeatherIcon, PrecipitationType, AlertSeverity } from './weathertypes';
+
 let app = { // This is mostly so VSCode can use Intellisense. If there is a better way to set this up, a PR or issue would be more than welcome!
     q: (selector:string) => <HTMLElement>document.querySelector(selector), // My own small selector (jQuery is massive and I'm stubborn and want to do things on my own)
     VERSION: '0.2.5', // Mostly so I can make sure the browser is updating the JS
@@ -17,11 +20,7 @@ let app = { // This is mostly so VSCode can use Intellisense. If there is a bett
     },
     searchJSON: {},
     locationJson: {},
-    weatherData: {
-        currently: {
-            time: undefined
-        }
-    },
+    weatherData: <WeatherData>undefined,
     touch: {
         MIN_DISTANCE: 1.0 / 6,
         start: {
@@ -53,10 +52,17 @@ let app = { // This is mostly so VSCode can use Intellisense. If there is a bett
                 temperature: <HTMLSpanElement>undefined,
                 condition: <HTMLSpanElement>undefined,
                 lastUpdate: <HTMLSpanElement>undefined
+            },
+            today: {
+                condition: <HTMLSpanElement>undefined,
+                temperature: <HTMLSpanElement>undefined
             }
         },
         input: {
             search: <HTMLInputElement>undefined
+        },
+        canvas: {
+            currently: <HTMLCanvasElement>undefined
         },
         other: {
             drawer: <HTMLDivElement>undefined,
@@ -77,6 +83,7 @@ let app = { // This is mostly so VSCode can use Intellisense. If there is a bett
         places: [],
         editing: false
     },
+    skycons: <Skycons>undefined,
     init: async() => {},
     initialized: false,
     updateLocation: async () => {},
@@ -109,10 +116,17 @@ app.init = async () => {
                 temperature: app.q('#temperature'),
                 condition: app.q('#condition'),
                 lastUpdate: app.q('#current .update')
+            },
+            today: {
+                condition: app.q('.today .condition'),
+                temperature: app.q('.today .temperature')
             }
         },
         input: {
             search: <HTMLInputElement>app.q('#locationsearch')
+        },
+        canvas: {
+            currently: <HTMLCanvasElement>app.q('#current-icon')
         },
         other: {
             drawer: <HTMLDivElement>app.q('nav'),
@@ -211,7 +225,13 @@ app.init = async () => {
         app.ui.text.currently.temperature.innerHTML = `${Math.round(currently.temperature)}&deg;F`;
         app.ui.text.currently.condition.textContent = currently.summary;
 
+        var today = json.daily.data[0];
+        app.ui.text.today.condition.textContent = today.summary;
+        app.ui.text.today.temperature.innerHTML = `↑${Math.round(today.temperatureHigh)} | ↓${Math.round(today.temperatureLow)}&deg;F`;
+
+
         var icon = currently.icon;
+        app.skycons.set(app.ui.canvas.currently, icon);
         if (icon.includes('day')) {
             app.q('.content').classList.remove('night');
             app.q('.content').classList.add('day');
@@ -274,6 +294,9 @@ app.init = async () => {
             app.q('#current').classList.add('cloudy');
             app.q('header').classList.add('cloudy');
         }
+
+        var color = window.getComputedStyle(document.querySelector('#current')).getPropertyValue("background-color");
+        document.querySelector("meta[name=theme-color]").setAttribute("color", color);
     };
     app.timer = () => { // Update the 'Last updated' timer
         var lastUpdate = new Date(app.weatherData.currently.time * 1000);
@@ -472,6 +495,13 @@ app.init = async () => {
             y:undefined
         };
     });
+
+    /*
+     * Skycons
+     */
+    app.skycons = new Skycons({'color': 'white', 'resizeClear': true});
+    app.skycons.add(app.ui.canvas.currently, 'clear-day');
+    app.skycons.play();
 
     app.saved.load();
 

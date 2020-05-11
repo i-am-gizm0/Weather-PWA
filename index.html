@@ -13,8 +13,9 @@
         <link rel="apple-touch-icon" href="icon.png">
         <meta name="apple-mobile-web-app-title" content="Weather">
         <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="theme-color" content="#6BB3FF">
 
-        <script defer src="https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js"></script>
+        <script src="scripts/skycons.js"></script>
         <script defer src="scripts/app.js"></script>
         <script>
             if ('serviceWorker' in navigator) {
@@ -23,7 +24,7 @@
                     // Registration was successful
                     console.log('ServiceWorker registration successful with scope: ', registration.scope);
                     }, function(err) {
-                    // registration failed :(
+                    // registration failed
                     console.log('ServiceWorker registration failed: ', err);
                     });
                 });
@@ -63,8 +64,15 @@
                 <section id="current">
                     <h1>Currently</h1>
                     <div class="conditions">
+                        <canvas width="256" height="256" id="current-icon"></canvas><br>
                         <span id="temperature" title="Current Temperature">--&deg;</span><br>
                         <span id="condition" title="Current Condition">Loading...</span>
+                        <br><br>
+                        <div class="today">
+                            <span>Today:</span>
+                            <span class="temperature" title="Today's Temperatures"></span><br>
+                            <i class="condition" title="Today's Conditions">Loading...</i>
+                        </div>
                     </div>
                     <div class="bottom">
                         <span class="update">Last updated: never</span>

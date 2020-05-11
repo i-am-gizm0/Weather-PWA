@@ -198,6 +198,7 @@ a .edit {
 main {
     width: 100%;
     max-width: 100%;
+    scroll-snap-type: y mandatory;
 }
 
 section {
@@ -217,6 +218,7 @@ section {
     border-top: 1px solid #0001;
     border-top-left-radius: 8px;
     border-top-right-radius: 8px;
+    scroll-snap-align: start;
 }
 
 /* section:first-child {
@@ -391,4 +393,10 @@ label, select {
 select {
     display: block;
     margin-left: 5%;
+}
+
+canvas {
+    /* outline: 1px solid red; */
+    width: 128px !important;
+    height: 128px !important;
 }

@@ -4,3 +4,6 @@ Thumbs.db
 secret.php
 # The compiled JS
 app.js
+weathertypes.js
+skycons.js
+node_modules/*

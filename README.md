@@ -10,3 +10,5 @@ Create a `secret.php` file in the `api` directory. It should be structured like 
     $weather_token = "<YOUR DARK SKY TOKEN>";
 ?>
 ```
+## Requirements
+You will need to `npm install skycons-ts` and download [`skycons.js`](https://github.com/darkskyapp/skycons/blob/master/skycons.js) and put it in the `scripts` directory
