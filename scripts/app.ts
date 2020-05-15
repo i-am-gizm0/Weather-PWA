@@ -3,7 +3,7 @@ import type { WeatherData, DataBlock, DataPoint, CurrentData, HourData, DayData,
 
 let app = { // This is mostly so VSCode can use Intellisense. If there is a better way to set this up, a PR or issue would be more than welcome!
     q: (selector:string) => <HTMLElement>document.querySelector(selector), // My own small selector (jQuery is massive and I'm stubborn and want to do things on my own)
-    VERSION: '0.2.5', // Mostly so I can make sure the browser is updating the JS
+    VERSION: '0.3.1', // Mostly so I can make sure the browser is updating the JS
     location: {
         key: 'location',
         string: localStorage.getItem('location') ||  '42.3601,-71.0589',
@@ -43,7 +43,11 @@ let app = { // This is mostly so VSCode can use Intellisense. If there is a bett
             back: <HTMLAnchorElement>undefined,
             edit: <HTMLAnchorElement>undefined,
             settings: <HTMLAnchorElement>undefined,
-            settingsBack: <HTMLAnchorElement>undefined
+            settingsBack: <HTMLAnchorElement>undefined,
+            alertScrollLeft: <HTMLAnchorElement>undefined,
+            alertScrollRight: <HTMLAnchorElement>undefined,
+            alertClose: <HTMLAnchorElement>undefined,
+            alertLink: <HTMLAnchorElement>undefined
         },
         text: {
             location: <HTMLSpanElement>undefined,
@@ -56,6 +60,11 @@ let app = { // This is mostly so VSCode can use Intellisense. If there is a bett
             today: {
                 condition: <HTMLSpanElement>undefined,
                 temperature: <HTMLSpanElement>undefined
+            },
+            alerts: {
+                icon: <HTMLSpanElement>undefined,
+                title: <HTMLSpanElement>undefined,
+                count: <HTMLSpanElement>undefined
             }
         },
         input: {
@@ -68,7 +77,9 @@ let app = { // This is mostly so VSCode can use Intellisense. If there is a bett
             drawer: <HTMLDivElement>undefined,
             navUnderlay: <HTMLDivElement>undefined,
             places: <HTMLDivElement>undefined,
-            settings: <HTMLDivElement>undefined
+            settings: <HTMLDivElement>undefined,
+            alert: <HTMLDivElement>undefined,
+            alertScroll: <HTMLDivElement>undefined
         }
     },
     saved: {
@@ -89,6 +100,8 @@ let app = { // This is mostly so VSCode can use Intellisense. If there is a bett
     updateLocation: async () => {},
     updateLocationText: async () => {},
     updateWeather: async () => {},
+    updateAlert: (alerts:Array<Alert>, index:number) => {},
+    changeAlert: (difference:number) => {},
     timer: () => {},
     locationSearch: async () => {},
     closeOverlay: (e?:Event) => {}
@@ -107,7 +120,11 @@ app.init = async () => {
             back: <HTMLAnchorElement>app.q('#back'),
             edit: <HTMLAnchorElement>app.q('#edit'),
             settings: <HTMLAnchorElement>app.q('#settings'),
-            settingsBack: <HTMLAnchorElement>app.q('#sback')
+            settingsBack: <HTMLAnchorElement>app.q('#sback'),
+            alertScrollLeft: <HTMLAnchorElement>app.q('#left'),
+            alertScrollRight: <HTMLAnchorElement>app.q('#right'),
+            alertClose: <HTMLAnchorElement>app.q('#alert-close'),
+            alertLink: <HTMLAnchorElement>app.q('#alert-link')
         },
         text: {
             location: app.q('#location'),
@@ -120,6 +137,11 @@ app.init = async () => {
             today: {
                 condition: app.q('.today .condition'),
                 temperature: app.q('.today .temperature')
+            },
+            alerts: {
+                icon: app.q('#alert-icon'),
+                title: app.q('#alert-text'),
+                count: app.q('#count')
             }
         },
         input: {
@@ -132,7 +154,9 @@ app.init = async () => {
             drawer: <HTMLDivElement>app.q('nav'),
             navUnderlay: <HTMLDivElement>app.q('.nav-underlay'),
             places: <HTMLDivElement>app.q('.places-container'),
-            settings: <HTMLDivElement>app.q('.settings')
+            settings: <HTMLDivElement>app.q('.settings'),
+            alert: <HTMLDivElement>app.q('.alerts'),
+            alertScroll: <HTMLDivElement>app.q('.scroll')
         }
     };
     app.ui.text.version.textContent = `App Version ${app.VERSION}`;
@@ -210,15 +234,57 @@ app.init = async () => {
         app.q('.content').classList.remove('nav-open');
     }
 
+
+    app.updateAlert = (alerts:Array<Alert>, index:number) => {
+        app.ui.other.alert.classList.remove('advisory');
+        app.ui.other.alert.classList.remove('watch');
+        app.ui.other.alert.classList.remove('warning');
+        app.q('header').classList.remove('advisory');
+        app.q('header').classList.remove('watch');
+        app.q('header').classList.remove('warning');
+        var num = alerts.length;
+        var alert = alerts[index % num];
+        var severity = alert.severity;
+        var title = alert.title;
+        var link = alert.uri;
+
+        app.ui.other.alert.classList.add(severity);
+        app.q('header').classList.add(severity);
+        app.ui.text.alerts.icon.textContent = severity=="advisory"?"info":"warning";
+        app.ui.text.alerts.title.textContent = title;
+        app.ui.text.alerts.count.textContent = `1/${num}`;
+        app.ui.button.alertLink.href = link;
+
+        app.ui.other.alertScroll.style.display = num>1?"block":"none";
+    }
+    app.changeAlert = (difference:number) => {
+        var count = app.ui.text.alerts.count.textContent;
+        var current = parseInt(count.substr(0, count.indexOf("/")));
+        var newVal = current + difference;
+        app.updateAlert(app.weatherData.alerts, newVal);
+    }
     app.updateWeather = async () => { // Query the API and update each field
         var encodedLocation = btoa(app.location.string);
         console.log(app.location.string, encodedLocation);
         console.log('Got location. Getting weather...');
         var response = await fetch(`api/?a=w&d=${encodedLocation}`);
         // console.log(response);
-        var json = await response.json();
+        var json = <WeatherData>(await response.json());
         console.log(json);
         app.weatherData = json;
+
+        
+        app.ui.other.alert.classList.remove('advisory');
+        app.ui.other.alert.classList.remove('watch');
+        app.ui.other.alert.classList.remove('warning');
+        app.q('header').classList.remove('advisory');
+        app.q('header').classList.remove('watch');
+        app.q('header').classList.remove('warning');
+        var alerts = json.alerts;
+        var num = alerts.length;
+        if (num > 0) {
+            app.updateAlert(alerts, 0);
+        }
 
         // Currently
         let currently = json.currently;
@@ -228,7 +294,6 @@ app.init = async () => {
         var today = json.daily.data[0];
         app.ui.text.today.condition.textContent = today.summary;
         app.ui.text.today.temperature.innerHTML = `↑${Math.round(today.temperatureHigh)} | ↓${Math.round(today.temperatureLow)}&deg;F`;
-
 
         var icon = currently.icon;
         app.skycons.set(app.ui.canvas.currently, icon);
@@ -412,6 +477,7 @@ app.init = async () => {
         e.preventDefault();
         app.q('.content').classList.add('nav-open');
         document.body.classList.add('scroll-lock');
+        // history.pushState({page:"menu"}, "menu");
     });
     app.ui.button.back.addEventListener('click', app.closeOverlay);
     app.ui.other.navUnderlay.addEventListener('click', app.closeOverlay);
@@ -440,6 +506,21 @@ app.init = async () => {
         e.preventDefault();
         app.ui.other.settings.classList.remove('show');
         document.body.classList.remove('scroll-lock');
+    });
+    app.ui.button.alertScrollLeft.addEventListener('click', e => {
+        e.preventDefault();
+        app.changeAlert(-1);
+    });
+    app.ui.button.alertScrollRight.addEventListener('click', e => {
+        e.preventDefault();
+        app.changeAlert(1);
+    });
+    app.ui.button.alertClose.addEventListener('click', e => {
+        e.preventDefault();
+        var a = app.ui.other.alert;
+        a.classList.remove('advisory');
+        a.classList.remove('watch');
+        a.classList.remove('warning');
     });
 
     /*
